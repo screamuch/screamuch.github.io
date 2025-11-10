@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Peter Chudinov</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/jpeg" href="images/profile.jpg">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <img src="images/profile.jpg" alt="Peter Chudinov" class="profile-pic">
+
+    <h1>Peter Chudinov</h1>
+
+    <p class="social-links">
+        <details class="email-dropdown">
+            <summary>Contact</summary>
+            peterchudinov[0x40]icloud[0x2E]com
+        </details>
+        |
+        <a href="https://scholar.google.com/citations?hl=ru&user=EZ8c1OEAAAAJ">Google Scholar</a> |
+        <a href="https://github.com/yourusername">GitHub</a> |
+        <a href="https://www.linkedin.com/in/peterchud/">LinkedIn</a>
+    </p>
+
+    <hr>
+
+    <p>
+        Bioengineering PhD student at University of Oregon. Just started...
+    </p>
+
+    <p>
+        At SF State I worked with <a href="https://chemistry.sfsu.edu/faculty/esquerra">Ray Esquerra</a> and <a href="https://www.ted.com/speakers/tom_zimmerman">Tom Zimmerman</a> on low-cost microscopes.
+        I also worked with <a href="http://www.sfsu-icelab.org/">Xiaorong Zhang</a> and <a href="http://sfsu-miclab.org/">Zhuwei Qin</a> on neural interfaces,
+        running deep learning on arduinos. Before that I was with <a href="https://cellgeometry.ucsf.edu/">Wallace Marshall</a> at UCSF
+        studying cell cognition. Earlier, I worked with <a href="https://www.csueastbay.edu/directory/profiles/cs/ertaullevent.html">Levent Ertaul</a> on IoT security.
+        Somewhere in between all of that I juggled software engineering internships at BridgeGood and 99Chairs, organized hackathons, and built content-generation plus optimal influencer-interaction pipelines.
+    </p>
+
+    <p>
+        I grew up in Moscow, went to high school in rural Finland, came to San Francisco for college
+        and stuck around. I did a random internship in Berlin and have traveled around most of the
+        northern hemisphere. I ski, skateboard, and code for fun. Sometimes on commission. I like to
+        build good-looking science things, and I do that with SF Exploratorium.
+    </p>
+
+    <h2>Featured Work</h2>
+
+    <div class="project">
+        <div class="project-image-placeholder" id="robocam-image">
+            <img src="images/robocam.jpg" alt="RoboCam">
+        </div>
+        <h3>RoboCam: Turning a 3D Printer into a Microscope</h3>
+        <p>An automated microscope powered by a(ny) 3D printer chassis. With a $200 AliExpress lens it supports imaging up to 2um/px magnification, fluorescence and plate reading. It's actively used in fruit fly fecundity studies, cell motility and photoresponse studies, and more that I have already lost track of. Fully open source, easy to replicate and customize. Shipped to UCSF, Stanford (not really), and Knox College during my tenure.</p>
+        <p class="project-links">
+            <span class="fake-link">paper</span> <em>(coming eventually)</em> <a href="https://github.com/screamuch/robocam">code</a> <a href="https://www.youtube.com/channel/UCa-Fm65VvaGldKf60zEHuVw">youtube</a>
+        </p>
+    </div>
+
+    <div class="project">
+        <div class="project-image-placeholder">
+            <img src="images/neural-interface.jpg" alt="Neural Machine Interface">
+        </div>
+        <h3>NeuroEdge/Neural²: Real-Time Hand Gesture Recognition on Embedded Systems</h3>
+        <p>Reading muscle signals from your forearm and predicting hand gestures in real-time on a Sony microcontroller. We collected HD EMG data, trained a tiny neural net that fits on the chip, and got it running at 90% accuracy with 83ms latency.</p>
+        <p class="project-links">
+            <span class="fake-link">paper</span> <em>(in review)</em> <span class="fake-link">code</span> <em>(available after publication)</em>
+        </p>
+    </div>
+
+    <div class="project">
+        <div class="project-image-placeholder">
+            <img src="images/single-cell.jpg" alt="Single-Cell Research">
+        </div>
+        <h3>Single Cell Intelligence & Engineering</h3>
+        <p>Exploring cognition in single-celled organisms (<i>Stentor</i>, <i>Physarum</i>) and engineering them for artistic applications. Projects include studying habituation in <i>Stentor coeruleus</i>, modeling slime mold spatial dynamics, and creating interactive exhibits like <i>dinoflagellates</i> glowing to music or <i>Physarum</i> replicating the map of US highways at the Exploratorium.</p>
+        <p class="project-links">
+            <a href="https://www.jove.com/t/64692/studying-habituation-in-stentor-coeruleus">paper</a>
+            <a href="https://wayback.archive-it.org/19866/20240505232644/https://www.exploratorium.edu/visit/calendar/after-dark-under-microscope">exhibit</a>
+            <a href="https://www.exploratorium.edu/visit/calendar/magnified">exhibit</a>
+            <a href="https://www.exploratorium.edu/visit/calendar/engineering-day">exhibit</a>
+        </p>
+    </div>
+
+    <div class="project">
+        <div class="project-image-placeholder">
+            <img src="images/music-ai.jpg" alt="Music AI">
+        </div>
+        <h3>An AI-based Method for Student Piano Performance Assessment</h3>
+        <p>Developed machine learning models to automatically assess student piano performances, providing feedback on timing, dynamics, and technique. Enables scalable music education through AI-powered evaluation.</p>
+        <p class="project-links">
+            <a href="https://www.launchpad.ai/blog/an-ai-based-method-for-student-piano-performance-assessment">article</a>
+        </p>
+    </div>
+
+    <h2 id="publications">Selected Publications & Presentations</h2>
+
+    <ul id="publications-list">
+        <li>
+            <strong>RoboCam: A Low-Cost High-Throughput Research Automation Platform</strong> (Poster - First Place)<br>
+            CoSE Showcase 2024, May 2024
+        </li>
+        <li>
+            <strong>Neural^2: Efficient Deep Neural Network for Neural-controlled Bionic Arm</strong> (Talk)<br>
+            Sony SSUP US End-year Event, September 2024
+        </li>
+        <li>
+            <strong>Studying Habituation in Stentor coeruleus</strong><br>
+            Deepa Rajan, Peter Chudinov, Wallace Marshall • January 2023
+        </li>
+        <li>
+            <strong>2nd Place - CytoData 2022 Hackathon</strong><br>
+            Allen Institute, October 2022
+        </li>
+        <li>
+            <strong>IoT Security: Authenticated Lightweight Key Exchange (ALIKE)</strong><br>
+            Ertaul L., Chudinov P., Morales B. • February 2019
+        </li>
+    </ul>
+
+    <hr>
+
+    <p style="font-size: 12px; color: #666;">&copy; 2025 Peter Chudinov</p>
+</body>
+</html>
