@@ -96,6 +96,16 @@ hr {
     color: #551A8B;
 }
 
+.contact-details {
+    display: block;
+    margin-top: 8px;
+}
+
+.contact-links {
+    display: block;
+    margin-top: 6px;
+}
+
 /* Projects */
 .project {
     margin-bottom: 35px;
