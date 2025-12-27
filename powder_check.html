@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Powder Check</title>
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;600&display=swap" />
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 14px;
+            background: #faf8f3;
+            color: #000;
+        }
+
+        #map { position: absolute; top: 0; left: 0; right: 0; bottom: 0; }
+
+        #panel {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 280px;
+            background: #fff;
+            border: 1px solid #999;
+            padding: 15px;
+            max-height: calc(100vh - 20px);
+            overflow-y: auto;
+        }
+
+        h1 {
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #8B1A1A;
+            border-bottom: 1px solid #8B1A1A;
+            padding-bottom: 6px;
+        }
+        h2 {
+            font-size: 0.9em;
+            font-weight: 600;
+            margin: 12px 0 6px;
+            color: #8B1A1A;
+        }
+
+        button {
+            background: #0000EE;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.85em;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        button:hover { background: #0000CC; }
+        button:disabled { background: #999; cursor: not-allowed; }
+
+        #status {
+            padding: 6px 8px;
+            margin-bottom: 10px;
+            font-size: 0.8em;
+            border: 1px solid;
+        }
+        .status-loading { background: #fff3cd; border-color: #856404; color: #856404; }
+        .status-success { background: #d4edda; border-color: #155724; color: #155724; }
+        .status-error { background: #f8d7da; border-color: #721c24; color: #721c24; }
+
+        #summary {
+            background: #faf8f3;
+            border-left: 3px solid #999;
+            padding: 8px 10px;
+            margin-bottom: 10px;
+            font-size: 0.85em;
+        }
+        .summary-clear { border-left-color: #28a745; }
+        .summary-caution { border-left-color: #ffc107; }
+        .summary-hazard { border-left-color: #dc3545; }
+
+        .legend {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 10px;
+            font-size: 0.75em;
+        }
+        .legend-item { display: flex; align-items: center; gap: 4px; }
+        .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .dot-green { background: #28a745; }
+        .dot-yellow { background: #ffc107; }
+        .dot-red { background: #dc3545; }
+
+        #warnings { font-size: 0.8em; }
+        .warning {
+            background: #faf8f3;
+            padding: 8px;
+            margin-bottom: 6px;
+            border-left: 3px solid #dc3545;
+        }
+        .warning-caution { border-left-color: #ffc107; }
+        .warning-location { font-weight: 600; margin-bottom: 2px; }
+        .warning-details { color: #666; font-size: 0.85em; }
+
+        #powder-forecast {
+            background: #faf8f3;
+            border: 1px solid #8B1A1A;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        #powder-forecast h2 {
+            color: #8B1A1A;
+            margin: 0 0 8px 0;
+            font-size: 0.85em;
+        }
+        .powder-day {
+            background: #fff;
+            border: 1px solid #ccc;
+            padding: 6px 8px;
+            margin-bottom: 4px;
+        }
+        .powder-day:last-child { margin-bottom: 0; }
+        .powder-date { font-weight: 600; font-size: 0.85em; }
+        .powder-amount { font-size: 0.8em; color: #666; }
+        .no-powder { color: #666; font-size: 0.8em; }
+
+        .route-inputs { margin-bottom: 10px; }
+        .route-inputs label {
+            display: block;
+            font-size: 0.75em;
+            color: #666;
+            margin-bottom: 2px;
+            margin-top: 8px;
+        }
+        .route-inputs label:first-child { margin-top: 0; }
+        .route-inputs select {
+            width: 100%;
+            padding: 6px;
+            border: 1px solid #999;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.85em;
+            background: white;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px solid #ccc;
+            font-size: 0.8em;
+        }
+
+        #route-info { display: none; }
+
+        .chains-warning {
+            background: #fff3cd;
+            border: 1px solid #856404;
+            color: #856404;
+            padding: 6px 8px;
+            margin-bottom: 8px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .powder-day {
+            cursor: pointer;
+        }
+        .powder-day:hover {
+            background: #f0f0f0;
+        }
+
+        #attribution {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 6px 12px;
+            font-size: 0.9em;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <div id="panel">
+        <h1>Powder Check</h1>
+
+        <div class="route-inputs">
+            <label for="start-select">Starting from</label>
+            <select id="start-select">
+                <option value="eugene">Eugene</option>
+                <option value="sacramento">Sacramento</option>
+                <option value="denver">Denver</option>
+                <option value="slc">Salt Lake City</option>
+            </select>
+            <label for="resort-select">Ski Resort</label>
+            <select id="resort-select">
+                <optgroup label="Oregon">
+                    <option value="hoodoo">Hoodoo</option>
+                    <option value="bachelor">Mt. Bachelor</option>
+                    <option value="willamette">Willamette Pass</option>
+                </optgroup>
+                <optgroup label="Tahoe">
+                    <option value="palisades">Palisades Tahoe</option>
+                    <option value="kirkwood">Kirkwood</option>
+                    <option value="heavenly">Heavenly</option>
+                    <option value="sierra_tahoe">Sierra at Tahoe</option>
+                </optgroup>
+                <optgroup label="Colorado - Ikon">
+                    <option value="winter_park">Winter Park</option>
+                    <option value="copper">Copper Mountain</option>
+                    <option value="arapahoe">Arapahoe Basin</option>
+                    <option value="steamboat">Steamboat</option>
+                    <option value="aspen">Aspen Snowmass</option>
+                </optgroup>
+                <optgroup label="Colorado - Epic">
+                    <option value="vail">Vail</option>
+                    <option value="beaver_creek">Beaver Creek</option>
+                    <option value="breckenridge">Breckenridge</option>
+                    <option value="keystone">Keystone</option>
+                </optgroup>
+                <optgroup label="Utah - Ikon">
+                    <option value="alta">Alta</option>
+                    <option value="snowbird">Snowbird</option>
+                    <option value="brighton">Brighton</option>
+                    <option value="solitude">Solitude</option>
+                    <option value="deer_valley">Deer Valley</option>
+                </optgroup>
+                <optgroup label="Utah - Epic">
+                    <option value="park_city">Park City</option>
+                </optgroup>
+            </select>
+        </div>
+        <button id="check-btn" onclick="check_weather()">Check Route</button>
+        <div id="status" style="display: none;"></div>
+        <div id="chains-warning" class="chains-warning" style="display: none;">Chains likely required</div>
+        <div class="legend">
+            <div class="legend-item"><div class="legend-dot dot-green"></div> Clear</div>
+            <div class="legend-item"><div class="legend-dot dot-yellow"></div> Caution</div>
+            <div class="legend-item"><div class="legend-dot dot-red"></div> Hazard</div>
+        </div>
+        <div id="summary" style="display: none;"></div>
+        <div id="powder-forecast" style="display: none;">
+            <h2 id="powder-header">Powder Forecast</h2>
+            <div id="powder-days"></div>
+        </div>
+        <div id="route-info">
+            <div class="info-row">
+                <span>Distance</span>
+                <span id="distance">—</span>
+            </div>
+            <div class="info-row">
+                <span>Sample Points</span>
+                <span id="sample-count">—</span>
+            </div>
+        </div>
+        <div id="warnings"></div>
+    </div>
+    <div id="attribution">Made by <a href="https://screamuch.github.io" target="_blank">Peter Chudinov</a></div>
+
+    <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+    <script>
+        const CITIES = {
+            eugene: { name: "Eugene", lat: 44.0521, lon: -123.0868 },
+            sacramento: { name: "Sacramento", lat: 38.5816, lon: -121.4944 },
+            denver: { name: "Denver", lat: 39.7392, lon: -104.9903 },
+            slc: { name: "Salt Lake City", lat: 40.7608, lon: -111.8910 }
+        };
+
+        const RESORTS = {
+            // Oregon
+            hoodoo: { name: "Hoodoo", lat: 44.4090, lon: -121.8720 },
+            bachelor: { name: "Mt. Bachelor", lat: 43.9792, lon: -121.6886 },
+            willamette: { name: "Willamette Pass", lat: 43.5967, lon: -122.0403 },
+            // Tahoe
+            palisades: { name: "Palisades Tahoe", lat: 39.1969, lon: -120.2358 },
+            kirkwood: { name: "Kirkwood", lat: 38.6849, lon: -120.0654 },
+            heavenly: { name: "Heavenly", lat: 38.9353, lon: -119.9400 },
+            sierra_tahoe: { name: "Sierra at Tahoe", lat: 38.7989, lon: -120.0800 },
+            // Colorado - Ikon
+            winter_park: { name: "Winter Park", lat: 39.8841, lon: -105.7627 },
+            copper: { name: "Copper Mountain", lat: 39.5022, lon: -106.1497 },
+            arapahoe: { name: "Arapahoe Basin", lat: 39.6426, lon: -105.8719 },
+            steamboat: { name: "Steamboat", lat: 40.4572, lon: -106.8045 },
+            aspen: { name: "Aspen Snowmass", lat: 39.1911, lon: -106.8175 },
+            // Colorado - Epic
+            vail: { name: "Vail", lat: 39.6403, lon: -106.3742 },
+            beaver_creek: { name: "Beaver Creek", lat: 39.6042, lon: -106.5165 },
+            breckenridge: { name: "Breckenridge", lat: 39.4817, lon: -106.0384 },
+            keystone: { name: "Keystone", lat: 39.6069, lon: -105.9530 },
+            // Utah - Ikon
+            alta: { name: "Alta", lat: 40.5884, lon: -111.6386 },
+            snowbird: { name: "Snowbird", lat: 40.5830, lon: -111.6538 },
+            brighton: { name: "Brighton", lat: 40.5980, lon: -111.5832 },
+            solitude: { name: "Solitude", lat: 40.6199, lon: -111.5919 },
+            deer_valley: { name: "Deer Valley", lat: 40.6374, lon: -111.4783 },
+            // Utah - Epic
+            park_city: { name: "Park City", lat: 40.6514, lon: -111.5080 }
+        };
+
+        const MILES_PER_SAMPLE = 10;
+        const METERS_PER_MILE = 1609.34;
+
+        // Initialize map centered between Oregon and Tahoe
+        const map = new maplibregl.Map({
+            container: 'map',
+            style: {
+                version: 8,
+                sources: {
+                    carto: {
+                        type: 'raster',
+                        tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+                        tileSize: 256
+                    }
+                },
+                layers: [{
+                    id: 'carto',
+                    type: 'raster',
+                    source: 'carto'
+                }]
+            },
+            center: [-112, 40],
+            zoom: 4
+        });
+
+        // Track markers for cleanup
+        let markers = [];
+        let powder_markers = [];
+        let route_source_added = false;
+
+        // Threshold for "powder day" (green marker)
+        const POWDER_DAY_INCHES = 10;
+
+        // Store resort marker elements for updating
+        const resort_elements = {};
+
+        function create_resort_marker_element(color = '#999') {
+            const el = document.createElement('div');
+            el.innerHTML = '❄';
+            el.style.fontSize = '16px';
+            el.style.width = '28px';
+            el.style.height = '28px';
+            el.style.backgroundColor = color;
+            el.style.color = 'white';
+            el.style.borderRadius = '50%';
+            el.style.display = 'flex';
+            el.style.alignItems = 'center';
+            el.style.justifyContent = 'center';
+            el.style.border = '2px solid white';
+            el.style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)';
+            el.style.cursor = 'pointer';
+            return el;
+        }
+
+        // Place all resort markers immediately on load
+        function place_resort_markers() {
+            for (const [key, resort] of Object.entries(RESORTS)) {
+                const el = create_resort_marker_element('#999'); // Gray placeholder
+                resort_elements[key] = el;
+
+                const popup = new maplibregl.Popup().setHTML(`<b>${resort.name}</b><br><div style="color:#999;">Loading forecast...</div>`);
+
+                const marker = new maplibregl.Marker({ element: el })
+                    .setLngLat([resort.lon, resort.lat])
+                    .setPopup(popup)
+                    .addTo(map);
+                powder_markers.push({ key, marker, popup });
+            }
+        }
+
+        // Fetch and update forecasts for all resorts
+        async function load_resort_forecasts() {
+            for (const [key, resort] of Object.entries(RESORTS)) {
+                try {
+                    const grid_data = await fetch_weather(resort.lat, resort.lon);
+                    const powder_days = analyze_powder_days(grid_data);
+
+                    // Check if any day has 10+ inches (true powder day)
+                    const has_powder_day = powder_days.some(p => parseFloat(p.snow_inches) >= POWDER_DAY_INCHES);
+
+                    // Update marker color
+                    const el = resort_elements[key];
+                    if (el) {
+                        el.style.backgroundColor = has_powder_day ? '#28a745' : '#333';
+                    }
+
+                    // Build popup content
+                    let popup_html = `<b>${resort.name}</b><br>`;
+                    if (powder_days.length > 0) {
+                        popup_html += '<div style="margin-top:8px;">';
+                        powder_days.forEach(p => {
+                            const is_powder = parseFloat(p.snow_inches) >= POWDER_DAY_INCHES;
+                            const date_iso = p.date.toISOString().split('T')[0];
+                            popup_html += `<div class="snow-day-link" data-resort="${key}" data-date="${date_iso}" style="padding:4px 0;cursor:pointer;${is_powder ? 'color:#28a745;font-weight:bold;' : ''}">
+                                ${p.date_str}: ${p.snow_inches}"${is_powder ? ' *' : ''}
+                            </div>`;
+                        });
+                        popup_html += '</div>';
+                    } else {
+                        popup_html += '<div style="color:#999;margin-top:4px;">No snow in forecast</div>';
+                    }
+
+                    // Update popup
+                    const marker_data = powder_markers.find(m => m.key === key);
+                    if (marker_data) {
+                        const new_popup = new maplibregl.Popup().setHTML(popup_html);
+                        new_popup.on('open', () => {
+                            document.querySelectorAll('.snow-day-link').forEach(link => {
+                                link.onclick = () => {
+                                    const resort_key = link.dataset.resort;
+                                    const date = link.dataset.date;
+                                    document.getElementById('resort-select').value = resort_key;
+                                    new_popup.remove();
+                                    check_weather_for_date(date);
+                                };
+                            });
+                        });
+                        marker_data.marker.setPopup(new_popup);
+                    }
+                } catch (e) {
+                    console.warn(`Failed to fetch forecast for ${resort.name}:`, e);
+                    // Update to show error state
+                    const el = resort_elements[key];
+                    if (el) {
+                        el.style.backgroundColor = '#333';
+                    }
+                    const marker_data = powder_markers.find(m => m.key === key);
+                    if (marker_data) {
+                        marker_data.marker.setPopup(new maplibregl.Popup().setHTML(`<b>${resort.name}</b><br><div style="color:#c00;">Failed to load forecast</div>`));
+                    }
+                }
+            }
+        }
+
+        map.on('load', () => {
+            place_resort_markers();
+            load_resort_forecasts();
+        });
+
+        function get_selected_route() {
+            const start_key = document.getElementById('start-select').value;
+            const resort_key = document.getElementById('resort-select').value;
+            return {
+                start: CITIES[start_key],
+                resort: RESORTS[resort_key]
+            };
+        }
+
+        function set_status(message, type) {
+            const el = document.getElementById('status');
+            el.textContent = message;
+            el.className = `status-${type}`;
+            el.style.display = 'block';
+        }
+
+        function haversine_distance(lat1, lon1, lat2, lon2) {
+            const R = 6371000; // Earth radius in meters
+            const phi1 = lat1 * Math.PI / 180;
+            const phi2 = lat2 * Math.PI / 180;
+            const delta_phi = (lat2 - lat1) * Math.PI / 180;
+            const delta_lambda = (lon2 - lon1) * Math.PI / 180;
+
+            const a = Math.sin(delta_phi / 2) ** 2 +
+                      Math.cos(phi1) * Math.cos(phi2) * Math.sin(delta_lambda / 2) ** 2;
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+            return R * c;
+        }
+
+        function sample_route(coordinates, interval_meters) {
+            const samples = [];
+            let accumulated = 0;
+            let next_sample_at = 0;
+
+            // Always include start
+            samples.push({
+                lat: coordinates[0][1],
+                lon: coordinates[0][0],
+                distance_miles: 0
+            });
+            next_sample_at = interval_meters;
+
+            for (let i = 1; i < coordinates.length; i++) {
+                const prev = coordinates[i - 1];
+                const curr = coordinates[i];
+                const segment_dist = haversine_distance(prev[1], prev[0], curr[1], curr[0]);
+                const segment_start = accumulated;
+                accumulated += segment_dist;
+
+                // Check if we need to place samples within this segment
+                while (next_sample_at <= accumulated && segment_dist > 0) {
+                    // Interpolate position along this segment
+                    const ratio = (next_sample_at - segment_start) / segment_dist;
+                    const interp_lon = prev[0] + (curr[0] - prev[0]) * ratio;
+                    const interp_lat = prev[1] + (curr[1] - prev[1]) * ratio;
+
+                    samples.push({
+                        lat: interp_lat,
+                        lon: interp_lon,
+                        distance_miles: Math.round(next_sample_at / METERS_PER_MILE)
+                    });
+                    next_sample_at += interval_meters;
+                }
+            }
+
+            // Always include end
+            const last = coordinates[coordinates.length - 1];
+            const last_sample = samples[samples.length - 1];
+            if (Math.abs(last_sample.lat - last[1]) > 0.0001 || Math.abs(last_sample.lon - last[0]) > 0.0001) {
+                samples.push({
+                    lat: last[1],
+                    lon: last[0],
+                    distance_miles: Math.round(accumulated / METERS_PER_MILE)
+                });
+            }
+
+            return samples;
+        }
+
+        async function fetch_route(start, end) {
+            const coords = `${start.lon},${start.lat};${end.lon},${end.lat}`;
+            const url = `https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`;
+
+            const response = await fetch(url);
+            const data = await response.json();
+
+            if (data.code !== 'Ok') {
+                throw new Error('Failed to fetch route from OSRM');
+            }
+
+            return data.routes[0];
+        }
+
+        async function fetch_weather(lat, lon) {
+            // Step 1: Get grid endpoint
+            const points_url = `https://api.weather.gov/points/${lat.toFixed(4)},${lon.toFixed(4)}`;
+            const points_resp = await fetch(points_url, {
+                headers: { 'User-Agent': 'drive-weather-check' }
+            });
+
+            if (!points_resp.ok) {
+                throw new Error(`NOAA points API error: ${points_resp.status}`);
+            }
+
+            const points_data = await points_resp.json();
+            const grid_url = points_data.properties.forecastGridData;
+
+            // Step 2: Get grid data
+            const grid_resp = await fetch(grid_url, {
+                headers: { 'User-Agent': 'drive-weather-check' }
+            });
+
+            if (!grid_resp.ok) {
+                throw new Error(`NOAA grid API error: ${grid_resp.status}`);
+            }
+
+            return await grid_resp.json();
+        }
+
+        function get_value_for_time(values, target_time) {
+            if (!values || values.length === 0) return null;
+
+            const target = target_time || new Date();
+
+            for (const v of values) {
+                const [start, duration] = v.validTime.split('/');
+                const start_time = new Date(start);
+
+                // Parse duration (e.g., PT1H, PT3H, PT6H)
+                const hours = parseInt(duration.match(/PT(\d+)H/)?.[1] || '1');
+                const end_time = new Date(start_time.getTime() + hours * 60 * 60 * 1000);
+
+                if (target >= start_time && target < end_time) {
+                    return v.value;
+                }
+            }
+
+            // Return first future value if no current match
+            return values[0]?.value ?? null;
+        }
+
+        function analyze_weather(grid_data, target_time = null) {
+            const props = grid_data.properties;
+
+            const temp_c = get_value_for_time(props.temperature?.values, target_time);
+            const temp_f = temp_c !== null ? (temp_c * 9/5) + 32 : null;
+
+            const precip_prob = get_value_for_time(props.probabilityOfPrecipitation?.values, target_time);
+            const precip_amount = get_value_for_time(props.quantitativePrecipitation?.values, target_time);
+            const snow_amount = get_value_for_time(props.snowfallAmount?.values, target_time);
+            const wind_speed_kmh = get_value_for_time(props.windSpeed?.values, target_time);
+            const wind_speed_mph = wind_speed_kmh !== null ? wind_speed_kmh * 0.621371 : null;
+            const visibility_m = get_value_for_time(props.visibility?.values, target_time);
+            const visibility_miles = visibility_m !== null ? visibility_m / 1609.34 : null;
+            const sky_cover = get_value_for_time(props.skyCover?.values, target_time);
+
+            // Determine status
+            let status = 'clear';
+            const issues = [];
+
+            // Snow/ice check
+            if (temp_f !== null && temp_f <= 32 && (precip_prob > 30 || snow_amount > 0)) {
+                status = 'hazard';
+                issues.push('Snow/ice likely');
+            } else if (temp_f !== null && temp_f <= 36 && precip_prob > 50) {
+                if (status !== 'hazard') status = 'caution';
+                issues.push('Near-freezing with precipitation');
+            }
+
+            // Heavy rain check
+            if (precip_prob >= 80 && precip_amount > 5) {
+                status = 'hazard';
+                issues.push('Heavy rain expected');
+            } else if (precip_prob >= 50) {
+                if (status !== 'hazard') status = 'caution';
+                issues.push('Rain likely');
+            }
+
+            // Visibility check
+            if (visibility_miles !== null && visibility_miles < 1) {
+                status = 'hazard';
+                issues.push('Very low visibility');
+            } else if (visibility_miles !== null && visibility_miles < 3) {
+                if (status !== 'hazard') status = 'caution';
+                issues.push('Reduced visibility');
+            }
+
+            // Wind check
+            if (wind_speed_mph !== null && wind_speed_mph >= 40) {
+                status = 'hazard';
+                issues.push('High winds');
+            } else if (wind_speed_mph !== null && wind_speed_mph >= 25) {
+                if (status !== 'hazard') status = 'caution';
+                issues.push('Gusty winds');
+            }
+
+            // Chain detection
+            let chains_required = false;
+            if (temp_f !== null && temp_f <= 35 && precip_prob > 30) {
+                chains_required = true;
+            }
+            if (snow_amount !== null && snow_amount > 0) {
+                chains_required = true;
+            }
+            if (visibility_miles !== null && visibility_miles < 2 && temp_f !== null && temp_f <= 35) {
+                chains_required = true;
+            }
+
+            return {
+                status,
+                issues,
+                chains_required,
+                temp_f: temp_f !== null ? Math.round(temp_f) : null,
+                precip_prob: precip_prob !== null ? Math.round(precip_prob) : null,
+                wind_mph: wind_speed_mph !== null ? Math.round(wind_speed_mph) : null,
+                visibility_miles: visibility_miles !== null ? visibility_miles.toFixed(1) : null,
+                sky_cover: sky_cover !== null ? Math.round(sky_cover) : null
+            };
+        }
+
+        function analyze_powder_days(grid_data) {
+            const props = grid_data.properties;
+            const snow_values = props.snowfallAmount?.values || [];
+
+            if (snow_values.length === 0) return [];
+
+            // Group snowfall by overnight periods (8pm to 8am next day)
+            // We'll track snow accumulation for each "overnight" leading into a morning
+            const overnight_snow = {};
+
+            for (const v of snow_values) {
+                if (v.value === null || v.value <= 0) continue;
+
+                const [start_str, duration] = v.validTime.split('/');
+                const start_time = new Date(start_str);
+                const hours = parseInt(duration.match(/PT(\d+)H/)?.[1] || '1');
+
+                // Check each hour in this period
+                for (let h = 0; h < hours; h++) {
+                    const check_time = new Date(start_time.getTime() + h * 60 * 60 * 1000);
+                    const hour = check_time.getHours();
+
+                    // Overnight hours: 8pm (20) to 8am (8)
+                    const is_overnight = hour >= 20 || hour < 8;
+
+                    if (is_overnight) {
+                        // Attribute to the morning date
+                        let morning_date = new Date(check_time);
+                        if (hour >= 20) {
+                            // It's evening, snow counts toward next morning
+                            morning_date.setDate(morning_date.getDate() + 1);
+                        }
+                        const date_key = morning_date.toISOString().split('T')[0];
+
+                        // Divide total snowfall evenly across hours in period
+                        const snow_per_hour = v.value / hours;
+
+                        if (!overnight_snow[date_key]) {
+                            overnight_snow[date_key] = 0;
+                        }
+                        overnight_snow[date_key] += snow_per_hour;
+                    }
+                }
+            }
+
+            // Convert to array and filter for powder days (> 10cm / ~4 inches overnight)
+            const powder_days = [];
+            const POWDER_THRESHOLD_CM = 10; // ~4 inches
+
+            for (const [date_key, snow_cm] of Object.entries(overnight_snow)) {
+                if (snow_cm >= POWDER_THRESHOLD_CM) {
+                    const date = new Date(date_key + 'T12:00:00');
+                    const snow_inches = (snow_cm / 2.54).toFixed(1);
+
+                    powder_days.push({
+                        date: date,
+                        date_str: date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
+                        snow_inches: snow_inches,
+                        snow_cm: Math.round(snow_cm)
+                    });
+                }
+            }
+
+            // Sort by date
+            powder_days.sort((a, b) => a.date - b.date);
+
+            return powder_days;
+        }
+
+        function get_marker_color(status) {
+            switch (status) {
+                case 'hazard': return '#dc3545';
+                case 'caution': return '#ffc107';
+                default: return '#28a745';
+            }
+        }
+
+        // Check weather for a specific date (called when clicking a snow day)
+        async function check_weather_for_date(date_str) {
+            // Set target time to 8am on that day (typical departure time)
+            const target_time = new Date(date_str + 'T08:00:00');
+            await check_weather(target_time);
+        }
+
+        async function check_weather(target_time = null) {
+            const btn = document.getElementById('check-btn');
+            btn.disabled = true;
+            btn.textContent = 'Checking...';
+
+            // Clear previous markers
+            markers.forEach(m => m.remove());
+            markers = [];
+
+            // Clear previous route
+            if (route_source_added) {
+                if (map.getLayer('route')) map.removeLayer('route');
+                if (map.getLayer('weather-points')) map.removeLayer('weather-points');
+                if (map.getSource('route')) map.removeSource('route');
+                if (map.getSource('weather-points')) map.removeSource('weather-points');
+            }
+
+            document.getElementById('warnings').innerHTML = '';
+            document.getElementById('summary').style.display = 'none';
+            document.getElementById('powder-forecast').style.display = 'none';
+            document.getElementById('chains-warning').style.display = 'none';
+
+            // Show which date we're checking
+            const check_date = target_time || new Date();
+            const date_label = check_date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' });
+
+            try {
+                // Get selected route
+                const { start, resort } = get_selected_route();
+
+                // Fetch route
+                set_status(`Fetching route to ${resort.name} (${date_label})...`, 'loading');
+                const route = await fetch_route(start, resort);
+
+                // Draw route on map
+                map.addSource('route', {
+                    type: 'geojson',
+                    data: {
+                        type: 'Feature',
+                        geometry: route.geometry
+                    }
+                });
+                map.addLayer({
+                    id: 'route',
+                    type: 'line',
+                    source: 'route',
+                    paint: {
+                        'line-color': '#3388ff',
+                        'line-width': 4
+                    }
+                });
+                route_source_added = true;
+
+                // Add start and end markers
+                const start_marker = new maplibregl.Marker({ color: '#3388ff' })
+                    .setLngLat([start.lon, start.lat])
+                    .setPopup(new maplibregl.Popup().setHTML(`<b>Start: ${start.name}</b>`))
+                    .addTo(map);
+                markers.push(start_marker);
+
+                const resort_marker = new maplibregl.Marker({ color: '#3388ff' })
+                    .setLngLat([resort.lon, resort.lat])
+                    .setPopup(new maplibregl.Popup().setHTML(`<b>${resort.name}</b>`))
+                    .addTo(map);
+                markers.push(resort_marker);
+
+                // Fit map to route (account for panel on left)
+                const coords = route.geometry.coordinates;
+                const bounds = coords.reduce((b, c) => b.extend(c), new maplibregl.LngLatBounds(coords[0], coords[0]));
+                map.fitBounds(bounds, { padding: { top: 50, bottom: 50, left: 320, right: 50 } });
+
+                // Sample points
+                const samples = sample_route(route.geometry.coordinates, MILES_PER_SAMPLE * METERS_PER_MILE);
+
+                document.getElementById('distance').textContent = `${Math.round(route.distance / METERS_PER_MILE)} miles`;
+                document.getElementById('sample-count').textContent = samples.length;
+                document.getElementById('route-info').style.display = 'block';
+
+                // First, fetch powder forecast for ski resort
+                set_status(`Checking snow forecast at ${resort.name}...`, 'loading');
+                let powder_days = [];
+
+                try {
+                    const resort_grid = await fetch_weather(resort.lat, resort.lon);
+                    powder_days = analyze_powder_days(resort_grid);
+                } catch (e) {
+                    console.warn('Failed to fetch powder forecast:', e);
+                }
+
+                // Display powder forecast
+                const powder_el = document.getElementById('powder-days');
+                const powder_container = document.getElementById('powder-forecast');
+                document.getElementById('powder-header').textContent = `Powder Forecast — ${resort.name}`;
+                powder_container.style.display = 'block';
+
+                if (powder_days.length > 0) {
+                    powder_el.innerHTML = powder_days.map(p => {
+                        const date_iso = p.date.toISOString().split('T')[0];
+                        return `
+                        <div class="powder-day" data-date="${date_iso}" onclick="check_weather_for_date('${date_iso}')">
+                            <div class="powder-date">${p.date_str}</div>
+                            <div class="powder-amount">${p.snow_inches}" overnight (~${p.snow_cm}cm)</div>
+                        </div>
+                    `}).join('');
+                } else {
+                    powder_el.innerHTML = '<div class="no-powder">No powder days in the 7-day forecast</div>';
+                }
+
+                // Fetch weather for each sample
+                const results = [];
+                for (let i = 0; i < samples.length; i++) {
+                    const sample = samples[i];
+                    set_status(`Fetching weather ${i + 1}/${samples.length}...`, 'loading');
+
+                    try {
+                        const grid_data = await fetch_weather(sample.lat, sample.lon);
+                        const analysis = analyze_weather(grid_data, target_time);
+                        results.push({ ...sample, ...analysis });
+
+                        // Add marker
+                        const color = get_marker_color(analysis.status);
+
+                        // Create custom circle marker element
+                        const el = document.createElement('div');
+                        el.style.width = '20px';
+                        el.style.height = '20px';
+                        el.style.borderRadius = '50%';
+                        el.style.backgroundColor = color;
+                        el.style.border = '2px solid white';
+                        el.style.cursor = 'pointer';
+                        el.style.boxShadow = '0 1px 3px rgba(0,0,0,0.3)';
+
+                        // Add chains text inside the dot if required
+                        if (analysis.chains_required) {
+                            el.textContent = 'C';
+                            el.style.color = 'white';
+                            el.style.fontSize = '11px';
+                            el.style.fontWeight = 'bold';
+                            el.style.fontFamily = 'Roboto Mono, monospace';
+                            el.style.display = 'flex';
+                            el.style.alignItems = 'center';
+                            el.style.justifyContent = 'center';
+                            el.style.backgroundColor = '#856404';
+                        }
+
+                        const chains_text = analysis.chains_required ? ' [C]' : '';
+
+                        let popup_html = `<b>Mile ${sample.distance_miles}${chains_text}</b><br>`;
+                        if (analysis.temp_f !== null) popup_html += `${analysis.temp_f}F`;
+                        if (analysis.precip_prob !== null) popup_html += ` | ${analysis.precip_prob}%`;
+                        if (analysis.wind_mph !== null) popup_html += ` | ${analysis.wind_mph}mph`;
+                        if (analysis.chains_required) popup_html += `<br><b>Chains likely</b>`;
+                        if (analysis.issues.length > 0) popup_html += `<br>${analysis.issues.join(', ')}`;
+
+                        const weather_marker = new maplibregl.Marker({ element: el })
+                            .setLngLat([sample.lon, sample.lat])
+                            .setPopup(new maplibregl.Popup().setHTML(popup_html))
+                            .addTo(map);
+                        markers.push(weather_marker);
+
+                        // Small delay to avoid rate limiting
+                        await new Promise(r => setTimeout(r, 200));
+                    } catch (e) {
+                        console.warn(`Failed to fetch weather for sample ${i}:`, e);
+                        results.push({ ...sample, status: 'unknown', issues: ['Weather data unavailable'] });
+                    }
+                }
+
+                // Generate summary
+                const hazards = results.filter(r => r.status === 'hazard');
+                const cautions = results.filter(r => r.status === 'caution');
+                const chains_needed = results.some(r => r.chains_required);
+
+                // Show chains warning if needed
+                const chains_el = document.getElementById('chains-warning');
+                chains_el.style.display = chains_needed ? 'block' : 'none';
+
+                const summary_el = document.getElementById('summary');
+                summary_el.style.display = 'block';
+
+                if (hazards.length > 0) {
+                    summary_el.className = 'summary-hazard';
+                    summary_el.innerHTML = `<b>${hazards.length} hazard${hazards.length > 1 ? 's' : ''} for ${date_label}</b><br>
+                        Review warnings below before driving.`;
+                } else if (cautions.length > 0) {
+                    summary_el.className = 'summary-caution';
+                    summary_el.innerHTML = `<b>${cautions.length} caution${cautions.length > 1 ? 's' : ''} for ${date_label}</b><br>
+                        Conditions are manageable but stay alert.`;
+                } else {
+                    summary_el.className = 'summary-clear';
+                    summary_el.innerHTML = `<b>Drive looks clear for ${date_label}</b><br>
+                        No significant weather concerns.`;
+                }
+
+                // List warnings
+                const warnings_el = document.getElementById('warnings');
+                const problem_points = results.filter(r => r.status !== 'clear' && r.issues.length > 0);
+
+                if (problem_points.length > 0) {
+                    warnings_el.innerHTML = '<h2>Warnings</h2>';
+                    problem_points.forEach(p => {
+                        const cls = p.status === 'hazard' ? '' : 'warning-caution';
+                        const chains_text = p.chains_required ? '<br><b>Chains likely required</b>' : '';
+                        warnings_el.innerHTML += `
+                            <div class="warning ${cls}">
+                                <div class="warning-location">Mile ${p.distance_miles}</div>
+                                <div class="warning-details">
+                                    ${p.issues.join(', ')}<br>
+                                    ${p.temp_f !== null ? `${p.temp_f}°F` : ''}
+                                    ${p.precip_prob !== null ? `| ${p.precip_prob}% precip` : ''}
+                                    ${p.wind_mph !== null ? `| ${p.wind_mph} mph wind` : ''}${chains_text}
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+
+                set_status(`Weather check complete for ${date_label}!`, 'success');
+
+            } catch (e) {
+                console.error(e);
+                set_status(`Error: ${e.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Check Weather';
+            }
+        }
+    </script>
+</body>
+</html>
