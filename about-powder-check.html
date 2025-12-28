@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Behind Powder Check</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Behind <a href="/powder-check.html">Powder Check</a></h1>
+    <p style="color: #666;">Built on Dec 27, 2025</p>
+
+    <hr>
+
+    <p>
+        On a faithfull December morning, the week that 25/26 ski season opened, I realized I needed a tool to track two things: when powder days arrive (as it is annoying to have the NOAA website open for each and every resort that's nearby), and what the drive is like up to the resorts. I have a FWD beater car with all-season tires, so getting stuck in the snow without chains handy (and those things are EXPENSIVE) does not sound like the best time. I already had to dig myself out of the Willamette Pass'es parking lot, and it ain't fun.
+
+        Here comes Powder Check to help you plan ski trips by checking weather conditions along your driving route
+        and forecasting powder days at your destination. It samples weather data every 10 miles along
+        your route (I may adjust that based on feedback) and flags potential hazards or where the chains might be required.
+    </p>
+
+    <h2>Resort and City Choice</h2>
+
+    <p>
+        I picked the resorts that are near where I live and/or places I am willing to travel to hit the slopes. If there will be interest in expanding this map to other resorts - I would love to get feedback and act on it!
+    </p>
+
+    <h2>Technology</h2>
+
+    <p>
+        The app is built with vanilla JavaScript and HTML - no frameworks, all requests are handled on client-side. Last thing I want is NOAA to ban me from seeing weather forecasts.
+        The interactive map uses <a href="https://maplibre.org/">MapLibre GL JS</a>, an open-source
+        fork of Mapbox GL JS.
+    </p>
+
+    <p>
+        <strong>Weather data</strong> comes from the <a href="https://www.weather.gov/documentation/services-web-api">NOAA National Weather Service API</a>.
+        It provides hourly forecasts including temperature, precipitation probability, snow accumulation,
+        wind speed, and visibility. The API is free and doesn't require authentication.
+    </p>
+
+    <p>
+        <strong>Routing</strong> uses <a href="http://project-osrm.org/">OSRM</a> (Open Source Routing Machine),
+        which calculates driving routes using OpenStreetMap data. The public demo server is used for route calculation.
+    </p>
+
+    <p>
+        <strong>Map tiles</strong> are served by OpenStreetMap.
+    </p>
+
+    <h2>Weather Thresholds</h2>
+
+    <h3>Route Hazards (Red Markers)</h3>
+    <ul>
+        <li><strong>Snow/ice likely:</strong> Temperature &le; 32&deg;F with precipitation probability &gt; 30% or any snow in forecast</li>
+        <li><strong>Heavy rain:</strong> Precipitation probability &ge; 80% with accumulation &gt; 5mm</li>
+        <li><strong>Very low visibility:</strong> Less than 1 mile</li>
+        <li><strong>High winds:</strong> Wind speed &ge; 40 mph</li>
+    </ul>
+
+    <h3>Route Cautions (Yellow Markers)</h3>
+    <ul>
+        <li><strong>Near-freezing with precipitation:</strong> Temperature &le; 36&deg;F with precipitation probability &gt; 50%</li>
+        <li><strong>Rain likely:</strong> Precipitation probability &ge; 50%</li>
+        <li><strong>Reduced visibility:</strong> 1-3 miles</li>
+        <li><strong>Gusty winds:</strong> Wind speed 25-40 mph</li>
+    </ul>
+
+    <h3>Chains Advisory</h3>
+    <p>
+        A "chains likely required" warning appears when any of these conditions are met - keep in mind that it won't work for cities/popular highways, but it certainly helps in places like Tahoe or PNW with low traffic/population density:
+    </p>
+    <ul>
+        <li>Temperature &le; 35&deg;F with precipitation probability &gt; 30%</li>
+        <li>Any snow in the forecast</li>
+        <li>Visibility &lt; 2 miles with temperature &le; 35&deg;F</li>
+    </ul>
+
+    <h3>Powder Day Forecast</h3>
+    <p>
+        A "powder day" is defined as <strong>10+ inches of overnight snowfall</strong> (8pm to 8am). I have Armada JJs, and they need about ~10 inches of snow to actually be fun to ski - sidecountry or even trees in the morning.
+        Resorts with upcoming powder days are marked with green snowflake icons on the map.
+        Days with 4+ inches (but less than 10) still appear in the forecast but aren't highlighted. Maybe the west coast cement will be more forgiving in the mornings (until the afternoon slush/chop arrives that is)
+    </p>
+
+    <hr>
+
+    <p style="font-size: 12px; color: #666;">
+        <a href="/powder-check.html">&larr; Back to Powder Check</a>
+    </p>
+</body>
+</html>
