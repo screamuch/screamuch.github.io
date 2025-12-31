@@ -782,20 +782,20 @@
                 }
             }
 
-            // Convert to array and filter for powder days (> 10cm / ~4 inches overnight)
+            // Convert to array and filter for snow days (4+ inches overnight)
             const powder_days = [];
-            const POWDER_THRESHOLD_CM = 10; // ~4 inches
+            const SNOW_DISPLAY_THRESHOLD_MM = 102; // ~4 inches (show in forecast)
 
-            for (const [date_key, snow_cm] of Object.entries(overnight_snow)) {
-                if (snow_cm >= POWDER_THRESHOLD_CM) {
+            for (const [date_key, snow_mm] of Object.entries(overnight_snow)) {
+                if (snow_mm >= SNOW_DISPLAY_THRESHOLD_MM) {
                     const date = new Date(date_key + 'T12:00:00');
-                    const snow_inches = (snow_cm / 2.54).toFixed(1);
+                    const snow_inches = (snow_mm / 25.4).toFixed(1);
 
                     powder_days.push({
                         date: date,
                         date_str: date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
                         snow_inches: snow_inches,
-                        snow_cm: Math.round(snow_cm)
+                        snow_cm: Math.round(snow_mm / 10)
                     });
                 }
             }
